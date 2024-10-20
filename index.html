@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Christmas Snakes & Ladders - 12 Days</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #dce0e5;
+            text-align: center;
+        }
+        h1 {
+            color: #d32f2f;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(6, 60px);
+            grid-template-rows: repeat(6, 60px);
+            gap: 5px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: #ffffff;
+            border: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .player {
+            background-color: #d32f2f;
+            color: #ffffff;
+            border-radius: 50%;
+            padding: 5px;
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button {
+            background-color: #d32f2f;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .button:disabled {
+            background-color: #cccccc;
+        }
+        #message {
+            color: #d32f2f;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Christmas Snakes & Ladders</h1>
+    <div class="board" id="board"></div>
+    <button id="rollButton" class="button">Roll Dice</button>
+    <p id="message"></p>
+
+    <script>
+        const board = document.getElementById('board');
+        const rollButton = document.getElementById('rollButton');
+        const message = document.getElementById('message');
+
+        const boardSize = 6; // 6x6 board (36 squares)
+        const maxDays = 12;
+        let currentDay = localStorage.getItem('currentDay') ? parseInt(localStorage.getItem('currentDay')) : 1;
+        let playerPosition = localStorage.getItem('playerPosition') ? parseInt(localStorage.getItem('playerPosition')) : 0;
+
+        const snakes = { 16: 6, 23: 3, 29: 14 }; // Snake positions (start -> end)
+        const ladders = { 2: 13, 8: 22, 15: 26 }; // Ladder positions (start -> end)
+
+        // Create the board
+        function createBoard() {
+            board.innerHTML = '';
+            for (let i = 1; i <= boardSize * boardSize; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.textContent = i;
+                if (i === playerPosition) {
+                    const player = document.createElement('div');
+                    player.classList.add('player');
+                    player.textContent = '🎅';
+                    cell.appendChild(player);
+                }
+                board.appendChild(cell);
+            }
+        }
+
+        // Roll the dice
+        rollButton.addEventListener('click', () => {
+            if (currentDay > maxDays) {
+                message.textContent = "You've completed the 12 days of Christmas!";
+                rollButton.disabled = true;
+                return;
+            }
+
+            const diceRoll = Math.floor(Math.random() * 6) + 1;
+            playerPosition += diceRoll;
+            message.textContent = `You rolled a ${diceRoll}. Moving to square ${playerPosition}.`;
+
+            // Check for snakes or ladders
+            if (snakes[playerPosition]) {
+                message.textContent += ` Oh no, a snake! Sliding down to square ${snakes[playerPosition]}.`;
+                playerPosition = snakes[playerPosition];
+            } else if (ladders[playerPosition]) {
+                message.textContent += ` Hooray, a ladder! Climbing up to square ${ladders[playerPosition]}.`;
+                playerPosition = ladders[playerPosition];
+            }
+
+            if (playerPosition >= boardSize * boardSize) {
+                message.textContent += " Congratulations! You've reached the end of the board.";
+                rollButton.disabled = true;
+            } else {
+                currentDay++;
+                localStorage.setItem('currentDay', currentDay);
+                localStorage.setItem('playerPosition', playerPosition);
+            }
+
+            createBoard();
+            if (currentDay > maxDays) {
+                rollButton.disabled = true;
+            } else {
+                rollButton.disabled = true;
+                message.textContent += ` Come back tomorrow for Day ${currentDay}!`;
+            }
+        });
+
+        // Check if the player has already played today
+        function checkDailyPlay() {
+            const lastPlayed = localStorage.getItem('lastPlayed');
+            const today = new Date().toDateString();
+            if (lastPlayed === today) {
+                message.textContent = "You've already played today. Come back tomorrow!";
+                rollButton.disabled = true;
+            } else {
+                rollButton.disabled = false;
+                localStorage.setItem('lastPlayed', today);
+            }
+        }
+
+        createBoard();
+        checkDailyPlay();
+    </script>
+</body>
+</html>
